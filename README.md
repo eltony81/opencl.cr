@@ -12,7 +12,7 @@ to implement more advanced use cases.  Feel free to submit PR's to add functiona
    ```yaml
    dependencies:
      opencl:
-       github: crystal-data/opencl.cr
+       github: eltony81/opencl.cr
    ```
 
 2. Run `shards install`
@@ -28,7 +28,7 @@ puts Cl.device_name(device)
 
 ## Contributing
 
-1. Fork it (<https://github.com/crystal-data/opencl.cr/fork>)
+1. Fork it (<https://github.com/eltony81/opencl.cr/fork>)
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
