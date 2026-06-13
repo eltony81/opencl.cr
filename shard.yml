@@ -1,5 +1,5 @@
 name: opencl
-version: 0.3.0
+version: 0.4.0
 description: Crystal bindings for OpenCL, providing utilities and high/low-level API wrappers for Crystal.
 
 authors:

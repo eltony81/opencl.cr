@@ -235,6 +235,9 @@ module Cl
     getter raw : Void*
     def initialize(@raw : Void*)
     end
+    def to_unsafe : Void*
+      @raw
+    end
   end
 
   def set_arg(kernel : LibCL::ClKernel, item : SVMPointer, index : UInt32)
@@ -340,6 +343,10 @@ module Cl
     check LibCL.cl_release_mem_object(buffer)
   end
 
+  def release_event(event : LibCL::ClEvent)
+    check LibCL.cl_release_event(event)
+  end
+
   def release_queue(queue : LibCL::ClCommandQueue)
     check LibCL.cl_release_queue(queue)
   end
@@ -354,5 +361,22 @@ module Cl
 
   def release_program(program : LibCL::ClProgram)
     check LibCL.cl_release_program(program)
+  end
+
+  def create_sub_buffer(buffer : LibCL::ClMem, origin : UInt64, size : UInt64, flags : LibCL::ClMemFlags = LibCL::ClMemFlags::READ_WRITE) : LibCL::ClMem
+    region = LibCL::ClBufferRegion.new(origin: LibC::SizeT.new(origin), size: LibC::SizeT.new(size))
+    sub_buf = LibCL.cl_create_sub_buffer(buffer, flags, LibCL::CL_BUFFER_CREATE_TYPE_REGION, pointerof(region), out status)
+    check status
+    sub_buf
+  end
+
+  def create_user_event(context : LibCL::ClContext) : LibCL::ClEvent
+    event = LibCL.cl_create_user_event(context, out status)
+    check status
+    event
+  end
+
+  def set_user_event_status(event : LibCL::ClEvent, execution_status : Int32)
+    check LibCL.cl_set_user_event_status(event, execution_status)
   end
 end

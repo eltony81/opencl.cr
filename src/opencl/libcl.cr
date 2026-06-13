@@ -191,6 +191,21 @@ lib LibCL
   fun cl_release_mem_object = clReleaseMemObject(memobj : ClMem) : ClInt
   fun cl_get_mem_object_info = clGetMemObjectInfo(memobj : ClMem, param_name : ClMemInfo, param_value_size : UInt64, param_value : Void*, param_value_size_ret : LibC::SizeT*) : ClInt
 
+  struct ClBufferRegion
+    origin : LibC::SizeT
+    size : LibC::SizeT
+  end
+
+  CL_BUFFER_CREATE_TYPE_REGION = 0x1220_u32
+
+  fun cl_create_sub_buffer = clCreateSubBuffer(
+    buffer : ClMem,
+    flags : ClMemFlags,
+    buffer_create_type : UInt32,
+    buffer_create_info : Void*,
+    errcode_ret : ClInt*
+  ) : ClMem
+
   alias ClProgram = Void*
   alias ClKernel = Void*
 
@@ -302,4 +317,6 @@ lib LibCL
     event : ClEvent*
   ) : ClInt
   fun cl_set_kernel_arg_svm_pointer = clSetKernelArgSVMPointer(kernel : ClKernel, arg_index : ClUint, arg_value : Void*) : ClInt
+  fun cl_create_user_event = clCreateUserEvent(context : ClContext, errcode_ret : ClInt*) : ClEvent
+  fun cl_set_user_event_status = clSetUserEventStatus(event : ClEvent, execution_status : ClInt) : ClInt
 end
