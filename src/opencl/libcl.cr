@@ -103,7 +103,26 @@ lib LibCL
     DEVICE_EXTENSIONS                    = 0x00001030
     DEVICE_PLATFORM                      = 0x00001031
     DEVICE_DOUBLE_FP_CONFIG              = 0x00001032
+    DEVICE_SVM_CAPABILITIES              = 0x00001053
   end
+
+  CL_DEVICE_SVM_COARSE_GRAIN_BUFFER = 1 << 0
+  CL_DEVICE_SVM_FINE_GRAIN_BUFFER   = 1 << 1
+  CL_DEVICE_SVM_FINE_GRAIN_SYSTEM   = 1 << 2
+  CL_DEVICE_SVM_ATOMICS             = 1 << 3
+
+  CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE = 1_u64 << 0
+  CL_QUEUE_PROFILING_ENABLE              = 1_u64 << 1
+  CL_QUEUE_ON_DEVICE                     = 1_u64 << 2
+  CL_QUEUE_ON_DEVICE_DEFAULT             = 1_u64 << 3
+
+  CL_QUEUE_PROPERTIES                    = 0x1093_u64
+  CL_QUEUE_SIZE                          = 0x1094_u64
+
+  CL_QUEUE_PRIORITY_KHR                  = 0x1096_u64
+  CL_QUEUE_PRIORITY_HIGH_KHR             = 1_u64 << 0
+  CL_QUEUE_PRIORITY_MED_KHR              = 1_u64 << 1
+  CL_QUEUE_PRIORITY_LOW_KHR              = 1_u64 << 2
 
   fun cl_get_device_ids = clGetDeviceIDs(platform : ClPlatformId, cl_device_type : UInt32, num_entries : ClUint, devices : ClDeviceId*, num_devices : ClUint*) : ClInt
   fun cl_get_device_info = clGetDeviceInfo(device : ClDeviceId, param_name : ClDeviceInfo, param_value_size : LibC::SizeT, param_value : Void*, param_value_size_ret : LibC::SizeT*) : ClInt
@@ -139,13 +158,21 @@ lib LibCL
 
   alias ClMem = Void*
 
-  enum ClMemFlags
-    READ_WRITE     = 1 << 0
-    WRITE_ONLY     = 1 << 1
-    READ_ONLY      = 1 << 2
-    USE_HOST_PTR   = 1 << 3
-    ALLOC_HOST_PTR = 1 << 4
-    COPY_HOST_PTR  = 1 << 5
+  enum ClMemFlags : UInt64
+    READ_WRITE            = 1_u64 << 0
+    WRITE_ONLY            = 1_u64 << 1
+    READ_ONLY             = 1_u64 << 2
+    USE_HOST_PTR          = 1_u64 << 3
+    ALLOC_HOST_PTR        = 1_u64 << 4
+    COPY_HOST_PTR         = 1_u64 << 5
+    SVM_FINE_GRAIN_BUFFER = 1_u64 << 10
+    SVM_ATOMICS           = 1_u64 << 11
+  end
+
+  enum ClMapFlags : UInt64
+    READ                    = 1_u64 << 0
+    WRITE                   = 1_u64 << 1
+    WRITE_INVALIDATE_REGION = 1_u64 << 2
   end
 
   enum ClMemInfo
@@ -254,4 +281,25 @@ lib LibCL
     event_wait_list : ClEvent*,
     event : ClEvent*
   ) : ClInt
+
+  fun cl_svm_alloc = clSVMAlloc(context : ClContext, flags : UInt64, size : LibC::SizeT, alignment : ClUint) : Void*
+  fun cl_svm_free = clSVMFree(context : ClContext, svm_pointer : Void*) : Void
+  fun cl_enqueue_svm_map = clEnqueueSVMMap(
+    command_queue : ClCommandQueue,
+    blocking_map : ClInt,
+    map_flags : UInt64,
+    svm_ptr : Void*,
+    size : LibC::SizeT,
+    num_events_in_wait_list : ClUint,
+    event_wait_list : ClEvent*,
+    event : ClEvent*
+  ) : ClInt
+  fun cl_enqueue_svm_unmap = clEnqueueSVMUnmap(
+    command_queue : ClCommandQueue,
+    svm_ptr : Void*,
+    num_events_in_wait_list : ClUint,
+    event_wait_list : ClEvent*,
+    event : ClEvent*
+  ) : ClInt
+  fun cl_set_kernel_arg_svm_pointer = clSetKernelArgSVMPointer(kernel : ClKernel, arg_index : ClUint, arg_value : Void*) : ClInt
 end

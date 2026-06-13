@@ -231,6 +231,33 @@ module Cl
     result
   end
 
+  struct SVMPointer
+    getter raw : Void*
+    def initialize(@raw : Void*)
+    end
+  end
+
+  def set_arg(kernel : LibCL::ClKernel, item : SVMPointer, index : UInt32)
+    check LibCL.cl_set_kernel_arg_svm_pointer(kernel, index, item.raw)
+  end
+
+  def map_svm(queue : LibCL::ClCommandQueue, blocking : Int32, flags : UInt64, ptr : Void*, size : UInt64)
+    check LibCL.cl_enqueue_svm_map(queue, blocking, flags, ptr, size, 0, nil, nil)
+  end
+
+  def unmap_svm(queue : LibCL::ClCommandQueue, ptr : Void*)
+    check LibCL.cl_enqueue_svm_unmap(queue, ptr, 0, nil, nil)
+  end
+
+  def svm_supported?(device : LibCL::ClDeviceId) : Bool
+    status = LibCL.cl_get_device_info(device, LibCL::ClDeviceInfo::DEVICE_SVM_CAPABILITIES, 0, nil, out size)
+    return false if status != 0
+    result = 0_u64
+    status = LibCL.cl_get_device_info(device, LibCL::ClDeviceInfo::DEVICE_SVM_CAPABILITIES, sizeof(UInt64), pointerof(result), nil)
+    return false if status != 0
+    result > 0
+  end
+
   def set_arg(kernel : LibCL::ClKernel, item : LibCL::ClMem, index : UInt32)
     check LibCL.cl_set_kernel_arg(kernel, index, sizeof(typeof(item)), pointerof(item))
   end
