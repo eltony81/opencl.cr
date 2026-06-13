@@ -121,12 +121,20 @@ lib LibCL
   ) : ClContext
 
   alias ClCommandQueue = Void*
+  alias ClQueueProperties = UInt64
 
   fun cl_create_command_queue = clCreateCommandQueue(
     context : ClContext,
     device : ClDeviceId,
     properties : Int32,
     err : ClInt*
+  ) : ClCommandQueue
+
+  fun cl_create_command_queue_with_properties = clCreateCommandQueueWithProperties(
+    context : ClContext,
+    device : ClDeviceId,
+    properties : ClQueueProperties*,
+    errcode_ret : ClInt*
   ) : ClCommandQueue
 
   alias ClMem = Void*

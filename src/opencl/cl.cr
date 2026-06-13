@@ -138,6 +138,12 @@ module Cl
     queue
   end
 
+  def command_queue_for(context : LibCL::ClContext, device : LibCL::ClDeviceId, properties : Array(LibCL::ClQueueProperties)) : LibCL::ClCommandQueue
+    queue = LibCL.cl_create_command_queue_with_properties(context, device, properties, out status)
+    check status
+    queue
+  end
+
   def opencl_defaults : {Array(LibCL::ClDeviceId), LibCL::ClContext}
     platform = first_platform
     devices = get_devices(platform)
