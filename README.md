@@ -1,5 +1,7 @@
 # opencl.cr
 
+Crystal bindings for OpenCL, providing utilities and high/low-level API wrappers for Crystal applications.
+
 This library is primarily maintained to provide necessary utilites to the
 `num.cr` numerical library, so not all features may be covered.  This library
 should however cover all basic use cases, as well as provide a lower level ability
@@ -36,4 +38,5 @@ puts Cl.device_name(device)
 
 ## Contributors
 
-- [Chris Zimmerman](https://github.com/christopherzimmerman) - creator and maintainer
+- [Chris Zimmerman](https://github.com/christopherzimmerman) - creator
+- [eltony81](https://github.com/eltony81) - maintainer
