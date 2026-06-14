@@ -35,14 +35,14 @@ module Cl
   def platform_name(id : LibCL::ClPlatformId) : String
     check LibCL.cl_get_platform_info(id, LibCL::ClPlatformInfo::PLATFORM_NAME, 0, nil, out size)
     result = Slice(UInt8).new(size)
-    check LibCL.cl_get_platform_info(id, LibCL::ClPlatformInfo::PLATFORM_NAME, size, result, nil)
+    check LibCL.cl_get_platform_info(id, LibCL::ClPlatformInfo::PLATFORM_NAME, size, result.to_unsafe, nil)
     String.new(result.to_unsafe)
   end
 
   def device_name(id : LibCL::ClDeviceId) : String
     check LibCL.cl_get_device_info(id, LibCL::ClDeviceInfo::DEVICE_NAME, 0, nil, out size)
     result = Slice(UInt8).new(size)
-    check LibCL.cl_get_device_info(id, LibCL::ClDeviceInfo::DEVICE_NAME, size, result, nil)
+    check LibCL.cl_get_device_info(id, LibCL::ClDeviceInfo::DEVICE_NAME, size, result.to_unsafe, nil)
     String.new(result.to_unsafe)
   end
 
@@ -76,7 +76,7 @@ module Cl
   def version(id : LibCL::ClPlatformId) : String
     check LibCL.cl_get_platform_info(id, LibCL::ClPlatformInfo::PLATFORM_VERSION, 0, nil, out size)
     result = Slice(UInt8).new(size)
-    check LibCL.cl_get_platform_info(id, LibCL::ClPlatformInfo::PLATFORM_VERSION, size, result, nil)
+    check LibCL.cl_get_platform_info(id, LibCL::ClPlatformInfo::PLATFORM_VERSION, size, result.to_unsafe, nil)
     String.new(result.to_unsafe)
   end
 
@@ -223,7 +223,7 @@ module Cl
   def build_errors(program : LibCL::ClProgram, devices : Array(LibCL::ClDeviceId)) : String
     check LibCL.cl_get_program_build_info(program, devices[0], LibCL::ClProgramBuildInfo::PROGRAM_BUILD_LOG, 0, nil, out log_size)
     result = Bytes.new(log_size)
-    check LibCL.cl_get_program_build_info(program, devices[0], LibCL::ClProgramBuildInfo::PROGRAM_BUILD_LOG, log_size, result, nil)
+    check LibCL.cl_get_program_build_info(program, devices[0], LibCL::ClProgramBuildInfo::PROGRAM_BUILD_LOG, log_size, result.to_unsafe, nil)
     String.new(result.to_unsafe)
   end
 
@@ -432,7 +432,7 @@ module Cl
   def supports_command_buffers?(device : LibCL::ClDeviceId) : Bool
     check LibCL.cl_get_device_info(device, LibCL::ClDeviceInfo::DEVICE_EXTENSIONS, 0, nil, out size)
     result = Slice(UInt8).new(size)
-    check LibCL.cl_get_device_info(device, LibCL::ClDeviceInfo::DEVICE_EXTENSIONS, size, result, nil)
+    check LibCL.cl_get_device_info(device, LibCL::ClDeviceInfo::DEVICE_EXTENSIONS, size, result.to_unsafe, nil)
     String.new(result.to_unsafe).includes?("cl_khr_command_buffer")
   rescue
     false
