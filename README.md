@@ -21,29 +21,35 @@ to implement more advanced use cases.  Feel free to submit PR's to add functiona
 
 ## Key Enhancements in this Fork
 
-This fork significantly extends the original library with support for modern OpenCL (2.x/3.0) features, improved safety, and better performance analysis:
+This fork significantly extends the original library with support for modern OpenCL (2.x/3.0) features, improved safety, and better performance analysis.
+
+### 🆕 New Functions & Methods
+Compared to the original repository, this fork adds the following:
+
+#### **Crystal High-Level Wrapper (`Cl` module)**
+- **Profiling**: `Cl.command_queue_with_profiling`, `Cl.get_profiling_info`, `Cl.run_with_event`.
+- **SVM (Shared Virtual Memory)**: `Cl.svm_supported?`, `Cl.supports_fine_grain_svm?`, `Cl.map_svm`, `Cl.unmap_svm`.
+- **Sub-buffers**: `Cl.create_sub_buffer`, `Cl.mem_base_addr_align`.
+- **Hardware Queries**: `Cl.supports_il?`, `Cl.supports_pipes?`, `Cl.supports_command_buffers?`.
+- **Advanced Programs**: `Cl.create_program_with_il` (SPIR-V support), `Cl.create_pipe`.
+- **Control**: `Cl.create_user_event`, `Cl.set_user_event_status`, `Cl.release_event`.
+- **Generic Kernel Handling**: `Cl.args` (macro for safe mixed-type arguments), generic `Cl.set_arg`.
+
+#### **C Bindings (`LibCL` module)**
+- **Memory**: `clSVMAlloc`, `clSVMFree`, `clEnqueueSVMMap`, `clEnqueueSVMUnmap`, `clCreateSubBuffer`, `clCreatePipe`.
+- **Execution & Events**: `clCreateUserEvent`, `clSetUserEventStatus`, `clGetEventProfilingInfo`, `clFinish`.
+- **Extensions**: `clGetExtensionFunctionAddress`, `clGetExtensionFunctionAddressForPlatform`, `clCreateCommandQueueWithProperties`.
+- **Programs & Interop**: `clCreateProgramWithIL`, `clCreateFromGLBuffer`.
 
 ### 🚀 Modern OpenCL Features (2.0+)
-- **Shared Virtual Memory (SVM)**: Support for `clSVMAlloc`, mapping, and unmapping. Allows host and device to share memory regions more efficiently.
-- **SPIR-V / Intermediate Language**: Support for loading pre-compiled SPIR-V binaries via `Cl.create_program_with_il`.
+- **Shared Virtual Memory (SVM)**: Allows host and device to share memory regions more efficiently.
+- **SPIR-V / Intermediate Language**: Support for loading pre-compiled binaries.
 - **Pipes**: Hardware-level FIFO queues for kernel-to-kernel communication.
-- **Sub-buffers**: Ability to create memory aliases for specific byte ranges of an existing buffer.
+- **Sub-buffers**: Create memory aliases for specific byte ranges.
 
 ### 📊 Profiling & Performance
-- **Kernel Profiling**: Enable profiling on command queues and retrieve nanosecond-precision execution timestamps (Queued, Submit, Start, End).
-- **Command Buffers**: Low-level bindings and extension support for `cl_khr_command_buffer`, reducing CPU overhead for batch operations.
-
-### 🛠️ Developer Experience & Safety
-- **Hardware Capability Queries**: New methods like `Cl.supports_il?`, `Cl.supports_pipes?`, and `Cl.supports_fine_grain_svm?` to gracefully handle different hardware capabilities.
-- **User Events**: Full support for creating and triggering manual events from the host.
-- **Improved FFI Safety**: 
-    - Automatic stripping of null terminators from C-strings (Platform/Device names, versions, build logs).
-    - Generic `Cl.set_arg` that supports any value type automatically.
-    - Safer memory management for platform and device IDs using Crystal-managed arrays.
-    - Explicit usage of `.to_unsafe` for better clarity and FFI compatibility.
-
-### 🎨 Graphics Interop
-- **OpenGL Interop**: Initial bindings for sharing buffers between OpenCL and OpenGL (`clCreateFromGLBuffer`).
+- **Kernel Profiling**: Nanosecond-precision execution timestamps.
+- **Improved FFI Safety**: Automatic null-terminator stripping and safer memory management.
 
 ## Usage Examples
 
