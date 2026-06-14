@@ -241,10 +241,10 @@ module Cl
     check LibCL.cl_set_kernel_arg(kernel, index, sizeof(typeof(item)).to_u64, pointerof(item).as(Void*))
   end
 
-  def args(kernel : LibCL::ClKernel, *args)
-    args.each_with_index do |arg, i|
-      set_arg(kernel, arg, UInt32.new(i))
-    end
+  macro args(kernel, *items)
+    {% for item, i in items %}
+      Cl.set_arg({{kernel}}, {{item}}, UInt32.new({{i}}))
+    {% end %}
   end
 
   def run(queue : LibCL::ClCommandQueue, kernel : LibCL::ClKernel, work : Int)
@@ -462,7 +462,7 @@ module Cl
     caps = 0_u64
     status = LibCL.cl_get_device_info(
       device,
-      LibCL::ClDeviceInfo.new(LibCL::CL_DEVICE_SVM_CAPABILITIES),
+      LibCL::ClDeviceInfo.new(LibCL::CL_DEVICE_SVM_CAPABILITIES.to_i32),
       sizeof(UInt64),
       pointerof(caps).as(Void*),
       nil
