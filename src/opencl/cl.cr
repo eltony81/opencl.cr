@@ -67,8 +67,9 @@ module Cl
   def max_work_items(id : LibCL::ClDeviceId) : Array(UInt64)
     dims = uninitialized UInt32
     check LibCL.cl_get_device_info(id, LibCL::ClDeviceInfo::DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(UInt32), pointerof(dims), nil)
-    result = (0...dims).to_a
-    check LibCL.cl_get_device_info(id, LibCL::ClDeviceInfo::DEVICE_MAX_WORK_ITEM_SIZES, dims * sizeof(UInt64), result, nil)
+    
+    result = Array(UInt64).new(dims.to_i, 0_u64)
+    check LibCL.cl_get_device_info(id, LibCL::ClDeviceInfo::DEVICE_MAX_WORK_ITEM_SIZES, dims * sizeof(UInt64), result.to_unsafe, nil)
     result
   end
 
