@@ -23,7 +23,7 @@ to implement more advanced use cases. Feel free to submit PR's to add functional
 
 ## Key Enhancements in this Fork
 
-This fork significantly extends the original library with support for modern OpenCL (2.x/3.0) features, improved safety, and better performance analysis.
+This fork significantly extends the original library (v0.7.0+) with support for modern OpenCL (2.x/3.0) features, improved safety, and better performance analysis.
 
 ### 🆕 New Functions & Methods
 Compared to the original repository, this fork adds the following:
