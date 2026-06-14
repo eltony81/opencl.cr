@@ -103,6 +103,8 @@ lib LibCL
     DEVICE_EXTENSIONS                    = 0x00001030
     DEVICE_PLATFORM                      = 0x00001031
     DEVICE_DOUBLE_FP_CONFIG              = 0x00001032
+    DEVICE_MAX_PIPE_ARGS                 = 0x00001055
+    DEVICE_IL_VERSION                    = 0x0000105B
   end
 
   fun cl_get_device_ids = clGetDeviceIDs(platform : ClPlatformId, cl_device_type : UInt32, num_entries : ClUint, devices : ClDeviceId*, num_devices : ClUint*) : ClInt
@@ -121,6 +123,9 @@ lib LibCL
   ) : ClContext
 
   alias ClCommandQueue = Void*
+
+  CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE = 1_u64 << 0
+  CL_QUEUE_PROFILING_ENABLE              = 1_u64 << 1
 
   fun cl_create_command_queue = clCreateCommandQueue(
     context : ClContext,
@@ -180,19 +185,67 @@ lib LibCL
 
   fun cl_create_program_with_source = clCreateProgramWithSource(context : ClContext, count : ClUint, strings : UInt8**, lengths : LibC::SizeT*, status : ClInt*) : ClProgram
   fun cl_create_program_with_binary = clCreateProgramWithBinary(context : ClContext, num_devices : ClUint, device_list : ClDeviceId*, lengths : LibC::SizeT*, binaries : UInt8**, binary_status : ClInt*, status : ClInt*)
+  fun cl_create_program_with_il = clCreateProgramWithIL(context : ClContext, il : Void*, length : LibC::SizeT, errcode_ret : ClInt*) : ClProgram
   fun cl_build_program = clBuildProgram(program : ClProgram, num_devices : ClUint, device_list : ClDeviceId*, options : Char*, pfn_notify : (ClProgram, Void* ->), user_data : Void*) : ClInt
   fun cl_create_kernel = clCreateKernel(program : ClProgram, kernel_name : UInt8*, status : ClInt*) : ClKernel
   fun cl_get_program_info = clGetProgramInfo(program : ClProgram, param_name : ClProgramInfo, param_value_size : LibC::SizeT, param_value : Void*, param_value_size_ret : LibC::SizeT*) : ClInt
   fun cl_get_program_build_info = clGetProgramBuildInfo(program : ClProgram, device : ClDeviceId, param_name : ClProgramBuildInfo, param_value_size : LibC::SizeT, param_value : Void*, param_value_size_ret : LibC::SizeT*) : ClInt
   fun cl_set_kernel_arg = clSetKernelArg(kernel : ClKernel, arg_index : ClUint, arg_size : UInt64, arg_value : Void*) : ClInt
 
+  # ---------------------------------------------------------------------------
+  # OpenCL 2.0+ — Pipes
+  # ---------------------------------------------------------------------------
+  fun cl_create_pipe = clCreatePipe(
+    context          : ClContext,
+    flags            : ClMemFlags,
+    pipe_packet_size : ClUint,
+    pipe_max_packets : ClUint,
+    properties       : ClContextProperties*,
+    errcode_ret      : ClInt*
+  ) : ClMem
+
+  # ---------------------------------------------------------------------------
+  # OpenCL — GL Interop (Basic)
+  # ---------------------------------------------------------------------------
+  alias GlUint = UInt32
+  fun cl_create_from_gl_buffer = clCreateFromGLBuffer(context : ClContext, flags : ClMemFlags, bufobj : GlUint, errcode_ret : ClInt*) : ClMem
+
   CL_FALSE = 0
   CL_TRUE  = 1
 
   alias ClEvent = Void*
 
+  fun cl_create_user_event = clCreateUserEvent(context : ClContext, errcode_ret : ClInt*) : ClEvent
+  fun cl_set_user_event_status = clSetUserEventStatus(event : ClEvent, execution_status : ClInt) : ClInt
   fun cl_wait_for_events = clWaitForEvents(num_events : ClUint, event_list : ClEvent*) : ClInt
   fun cl_release_event = clReleaseEvent(event : ClEvent) : ClInt
+
+  enum ClProfilingInfo : ClUint
+    PROFILING_COMMAND_QUEUED = 0x1280
+    PROFILING_COMMAND_SUBMIT = 0x1281
+    PROFILING_COMMAND_START  = 0x1282
+    PROFILING_COMMAND_END    = 0x1283
+  end
+
+  fun cl_get_event_profiling_info = clGetEventProfilingInfo(
+    event : ClEvent,
+    param_name : ClProfilingInfo,
+    param_value_size : LibC::SizeT,
+    param_value : Void*,
+    param_value_size_ret : LibC::SizeT*
+  ) : ClInt
+
+  # ---------------------------------------------------------------------------
+  # OpenCL — Command Buffers (cl_khr_command_buffer)
+  # ---------------------------------------------------------------------------
+  alias ClCommandBufferKHR = Void*
+  alias ClMutableCommandBufferKHR = Void*
+
+  alias ClCreateCommandBufferKHR = ClUint, ClCommandQueue*, UInt64*, ClInt* -> ClCommandBufferKHR
+  alias ClFinalizeCommandBufferKHR = ClCommandBufferKHR -> ClInt
+  alias ClReleaseCommandBufferKHR = ClCommandBufferKHR -> ClInt
+  alias ClEnqueueCommandBufferKHR = ClUint, ClCommandQueue*, ClCommandBufferKHR, ClUint, ClEvent*, ClEvent* -> ClInt
+  alias ClCommandNDRangeKernelKHR = ClCommandBufferKHR, ClMutableCommandBufferKHR, UInt64*, ClKernel, ClUint, LibC::SizeT*, LibC::SizeT*, LibC::SizeT*, ClUint, ClEvent*, ClEvent* -> ClInt
 
   fun cl_enqueue_write_buffer = clEnqueueWriteBuffer(
     command_queue : ClCommandQueue,
@@ -253,7 +306,6 @@ lib LibCL
 
   # Queue property keys / values (used as a null-terminated UInt64 array)
   CL_QUEUE_PROPERTIES                    = 0x9013_u64
-  CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE = 1_u64
   CL_QUEUE_PRIORITY_KHR                  = 0x1044_u64
   CL_QUEUE_PRIORITY_HIGH_KHR             = 1_u64
 
@@ -331,4 +383,7 @@ lib LibCL
   # ---------------------------------------------------------------------------
 
   CL_DEVICE_SVM_COARSE_GRAIN_BUFFER = 1_u64  # bit 0 of SVM capabilities mask
+
+  fun cl_get_extension_function_address = clGetExtensionFunctionAddress(func_name : UInt8*) : Void*
+  fun cl_get_extension_function_address_for_platform = clGetExtensionFunctionAddressForPlatform(platform : ClPlatformId, func_name : UInt8*) : Void*
 end
