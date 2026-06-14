@@ -138,12 +138,6 @@ module Cl
     queue
   end
 
-  def command_queue_for(context : LibCL::ClContext, device : LibCL::ClDeviceId, properties : Array(LibCL::ClQueueProperties)) : LibCL::ClCommandQueue
-    queue = LibCL.cl_create_command_queue_with_properties(context, device, properties, out status)
-    check status
-    queue
-  end
-
   def opencl_defaults : {Array(LibCL::ClDeviceId), LibCL::ClContext}
     platform = first_platform
     devices = get_devices(platform)
@@ -231,36 +225,6 @@ module Cl
     result
   end
 
-  struct SVMPointer
-    getter raw : Void*
-    def initialize(@raw : Void*)
-    end
-    def to_unsafe : Void*
-      @raw
-    end
-  end
-
-  def set_arg(kernel : LibCL::ClKernel, item : SVMPointer, index : UInt32)
-    check LibCL.cl_set_kernel_arg_svm_pointer(kernel, index, item.raw)
-  end
-
-  def map_svm(queue : LibCL::ClCommandQueue, blocking : Int32, flags : UInt64, ptr : Void*, size : UInt64)
-    check LibCL.cl_enqueue_svm_map(queue, blocking, flags, ptr, size, 0, nil, nil)
-  end
-
-  def unmap_svm(queue : LibCL::ClCommandQueue, ptr : Void*)
-    check LibCL.cl_enqueue_svm_unmap(queue, ptr, 0, nil, nil)
-  end
-
-  def svm_supported?(device : LibCL::ClDeviceId) : Bool
-    status = LibCL.cl_get_device_info(device, LibCL::ClDeviceInfo::DEVICE_SVM_CAPABILITIES, 0, nil, out size)
-    return false if status != 0
-    result = 0_u64
-    status = LibCL.cl_get_device_info(device, LibCL::ClDeviceInfo::DEVICE_SVM_CAPABILITIES, sizeof(UInt64), pointerof(result), nil)
-    return false if status != 0
-    result > 0
-  end
-
   def set_arg(kernel : LibCL::ClKernel, item : LibCL::ClMem, index : UInt32)
     check LibCL.cl_set_kernel_arg(kernel, index, sizeof(typeof(item)), pointerof(item))
   end
@@ -343,10 +307,6 @@ module Cl
     check LibCL.cl_release_mem_object(buffer)
   end
 
-  def release_event(event : LibCL::ClEvent)
-    check LibCL.cl_release_event(event)
-  end
-
   def release_queue(queue : LibCL::ClCommandQueue)
     check LibCL.cl_release_queue(queue)
   end
@@ -363,20 +323,99 @@ module Cl
     check LibCL.cl_release_program(program)
   end
 
-  def create_sub_buffer(buffer : LibCL::ClMem, origin : UInt64, size : UInt64, flags : LibCL::ClMemFlags = LibCL::ClMemFlags::READ_WRITE) : LibCL::ClMem
-    region = LibCL::ClBufferRegion.new(origin: LibC::SizeT.new(origin), size: LibC::SizeT.new(size))
-    sub_buf = LibCL.cl_create_sub_buffer(buffer, flags, LibCL::CL_BUFFER_CREATE_TYPE_REGION, pointerof(region), out status)
+  # ---------------------------------------------------------------------------
+  # OpenCL 2.0+ — Shared Virtual Memory helpers
+  # ---------------------------------------------------------------------------
+
+  # Wraps a raw SVM (Shared Virtual Memory) pointer returned by `clSVMAlloc`.
+  # The pointer can be accessed directly by both host and device without explicit
+  # copy operations when the device supports coarse-grain buffer SVM.
+  class SVMPointer
+    getter raw : Void*
+
+    def initialize(@raw : Void*)
+    end
+  end
+
+  # Returns `true` if the given OpenCL device supports at least coarse-grain
+  # buffer Shared Virtual Memory (SVM capabilities bitmask > 0).
+  def svm_supported?(device : LibCL::ClDeviceId) : Bool
+    caps = 0_u64
+    status = LibCL.cl_get_device_info(
+      device,
+      LibCL::ClDeviceInfo.new(LibCL::CL_DEVICE_SVM_CAPABILITIES),
+      sizeof(UInt64),
+      pointerof(caps).as(Void*),
+      nil
+    )
+    status == 0 && caps > 0
+  rescue
+    false
+  end
+
+  # Maps an SVM region into host-accessible memory synchronously or
+  # asynchronously depending on *blocking*.
+  #
+  # * *queue*    – the OpenCL command queue
+  # * *blocking* – `LibCL::CL_TRUE` blocks until the map operation completes
+  # * *flags*    – `LibCL::ClMapFlags` (READ, WRITE, WRITE_INVALIDATE_REGION)
+  # * *ptr*      – the SVM `Void*` to map (must have been allocated via `clSVMAlloc`)
+  # * *size*     – number of bytes to map
+  def map_svm(
+    queue    : LibCL::ClCommandQueue,
+    blocking : Int32,
+    flags    : UInt64,
+    ptr      : Void*,
+    size     : UInt64
+  )
+    rc = LibCL.cl_enqueue_svm_map(queue, blocking, flags, ptr, size, 0_u32, nil, nil)
+    check rc
+  end
+
+  # Unmaps a previously mapped SVM region, signalling to the driver that
+  # host writes are complete and the device may resume accessing the memory.
+  def unmap_svm(queue : LibCL::ClCommandQueue, ptr : Void*)
+    rc = LibCL.cl_enqueue_svm_unmap(queue, ptr, 0_u32, nil, nil)
+    check rc
+  end
+
+  # ---------------------------------------------------------------------------
+  # OpenCL 1.1+ — Sub-buffer helper
+  # ---------------------------------------------------------------------------
+
+  # Creates an OpenCL sub-buffer that aliases a byte range of *buffer*.
+  #
+  # The *byte_offset* must be aligned to the device's `CL_DEVICE_MEM_BASE_ADDR_ALIGN`
+  # value (retrievable via `Cl.mem_base_addr_align`).
+  def create_sub_buffer(
+    buffer      : LibCL::ClMem,
+    byte_offset : UInt64,
+    byte_size   : UInt64
+  ) : LibCL::ClMem
+    region = LibCL::ClBufferRegion.new(origin: byte_offset, size: byte_size)
+    status = 0
+    sub_buf = LibCL.cl_create_sub_buffer(
+      buffer,
+      LibCL::ClMemFlags::READ_WRITE,
+      LibCL::CL_BUFFER_CREATE_TYPE_REGION,
+      pointerof(region).as(Void*),
+      pointerof(status)
+    )
     check status
     sub_buf
   end
 
-  def create_user_event(context : LibCL::ClContext) : LibCL::ClEvent
-    event = LibCL.cl_create_user_event(context, out status)
-    check status
-    event
-  end
-
-  def set_user_event_status(event : LibCL::ClEvent, execution_status : Int32)
-    check LibCL.cl_set_user_event_status(event, execution_status)
+  # Returns the base address alignment (in bits) required for sub-buffers on
+  # the given device. Divide by 8 to get byte alignment.
+  def mem_base_addr_align(device : LibCL::ClDeviceId) : UInt32
+    result = 0_u32
+    check LibCL.cl_get_device_info(
+      device,
+      LibCL::ClDeviceInfo::DEVICE_MEM_BASE_ADDR_ALIGN,
+      sizeof(UInt32),
+      pointerof(result).as(Void*),
+      nil
+    )
+    result
   end
 end

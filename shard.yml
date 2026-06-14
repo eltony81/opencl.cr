@@ -1,14 +1,10 @@
 name: opencl
-version: 0.4.0
-description: Crystal bindings for OpenCL, providing utilities and high/low-level API wrappers for Crystal.
+version: 0.5.0
 
 authors:
   - Chris Zimmerman <chris-zimmerman@live.com>
-  - eltony81 <eltony81@users.noreply.github.com>
+  - eltony81 <antonio.difluri@gmail.com>
 
-homepage: https://github.com/eltony81/opencl.cr
-repository: https://github.com/eltony81/opencl.cr
-
-crystal: 0.32.1
+crystal: ">= 1.0.0"
 
 license: MIT
