@@ -45,13 +45,65 @@ This fork significantly extends the original library with support for modern Ope
 ### 🎨 Graphics Interop
 - **OpenGL Interop**: Initial bindings for sharing buffers between OpenCL and OpenGL (`clCreateFromGLBuffer`).
 
-## Usage
+## Usage Examples
 
+Here are some of the most important functions and how to use them. For complete scripts, see the `examples/` directory.
+
+### Basic Vector Addition
 ```crystal
 require "opencl"
 
 device, context, queue = Cl.single_device_defaults
-puts Cl.device_name(device)
+
+# Create buffers from Crystal arrays
+a = [1.0_f32, 2.0_f32, 3.0_f32]
+buf_a = Cl.buffer_like(context, a)
+Cl.write(queue, a, buf_a)
+
+# ... (setup other buffers and build program)
+
+# Set kernel arguments and run
+Cl.args(kernel, buf_a, buf_b, buf_res)
+Cl.run(queue, kernel, a.size)
+```
+
+### Advanced Features
+
+#### Kernel Profiling
+Measure execution time in nanoseconds:
+```crystal
+queue = Cl.command_queue_with_profiling(context, device)
+event = Cl.run_with_event(queue, kernel, work_size)
+
+# Wait for completion
+LibCL.cl_wait_for_events(1, pointerof(event))
+
+start = Cl.get_profiling_info(event, LibCL::ClProfilingInfo::PROFILING_COMMAND_START)
+end_t = Cl.get_profiling_info(event, LibCL::ClProfilingInfo::PROFILING_COMMAND_END)
+puts "Execution time: #{end_t - start} ns"
+```
+
+#### Shared Virtual Memory (SVM)
+Share memory pointers between Host and Device (OpenCL 2.0+):
+```crystal
+if Cl.svm_supported?(device)
+  # Allocate SVM memory
+  ptr = LibCL.cl_svm_alloc(context, LibCL::ClMemFlags::READ_WRITE.to_u64, size, 0_u32)
+  
+  # Map for Host access
+  Cl.map_svm(queue, LibCL::CL_TRUE, LibCL::ClMapFlags::WRITE.to_u64, ptr, size)
+  # ... use ptr directly ...
+  Cl.unmap_svm(queue, ptr)
+end
+```
+
+#### Multi-dimensional Execution
+```crystal
+# Run a 2D grid kernel
+Cl.run2d(queue, kernel, {width, height})
+
+# Run a 3D grid kernel with local work item size
+Cl.run3d(queue, kernel, {100, 100, 100}, {10, 10, 10})
 ```
 
 ## Contributing

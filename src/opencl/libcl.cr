@@ -261,6 +261,7 @@ lib LibCL
 
   fun cl_release_context = clReleaseContext(context : ClContext) : ClInt
   fun cl_release_queue = clReleaseCommandQueue(queue : ClCommandQueue) : ClInt
+  fun cl_finish = clFinish(queue : ClCommandQueue) : ClInt
   fun cl_release_kernel = clReleaseKernel(kernel : ClKernel) : ClInt
   fun cl_release_program = clReleaseProgram(program : ClProgram) : ClInt
 
