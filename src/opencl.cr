@@ -24,5 +24,5 @@
 require "./opencl/cl"
 
 module Cl
-  VERSION = "0.6.4"
+  VERSION = "0.6.5"
 end
