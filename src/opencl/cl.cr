@@ -322,4 +322,100 @@ module Cl
   def release_program(program : LibCL::ClProgram)
     check LibCL.cl_release_program(program)
   end
+
+  # ---------------------------------------------------------------------------
+  # OpenCL 2.0+ — Shared Virtual Memory helpers
+  # ---------------------------------------------------------------------------
+
+  # Wraps a raw SVM (Shared Virtual Memory) pointer returned by `clSVMAlloc`.
+  # The pointer can be accessed directly by both host and device without explicit
+  # copy operations when the device supports coarse-grain buffer SVM.
+  class SVMPointer
+    getter raw : Void*
+
+    def initialize(@raw : Void*)
+    end
+  end
+
+  # Returns `true` if the given OpenCL device supports at least coarse-grain
+  # buffer Shared Virtual Memory (SVM capabilities bitmask > 0).
+  def svm_supported?(device : LibCL::ClDeviceId) : Bool
+    caps = 0_u64
+    status = LibCL.cl_get_device_info(
+      device,
+      LibCL::ClDeviceInfo.new(LibCL::CL_DEVICE_SVM_CAPABILITIES),
+      sizeof(UInt64),
+      pointerof(caps).as(Void*),
+      nil
+    )
+    status == 0 && caps > 0
+  rescue
+    false
+  end
+
+  # Maps an SVM region into host-accessible memory synchronously or
+  # asynchronously depending on *blocking*.
+  #
+  # * *queue*    – the OpenCL command queue
+  # * *blocking* – `LibCL::CL_TRUE` blocks until the map operation completes
+  # * *flags*    – `LibCL::ClMapFlags` (READ, WRITE, WRITE_INVALIDATE_REGION)
+  # * *ptr*      – the SVM `Void*` to map (must have been allocated via `clSVMAlloc`)
+  # * *size*     – number of bytes to map
+  def map_svm(
+    queue    : LibCL::ClCommandQueue,
+    blocking : Int32,
+    flags    : UInt64,
+    ptr      : Void*,
+    size     : UInt64
+  )
+    rc = LibCL.cl_enqueue_svm_map(queue, blocking, flags, ptr, size, 0_u32, nil, nil)
+    check rc
+  end
+
+  # Unmaps a previously mapped SVM region, signalling to the driver that
+  # host writes are complete and the device may resume accessing the memory.
+  def unmap_svm(queue : LibCL::ClCommandQueue, ptr : Void*)
+    rc = LibCL.cl_enqueue_svm_unmap(queue, ptr, 0_u32, nil, nil)
+    check rc
+  end
+
+  # ---------------------------------------------------------------------------
+  # OpenCL 1.1+ — Sub-buffer helper
+  # ---------------------------------------------------------------------------
+
+  # Creates an OpenCL sub-buffer that aliases a byte range of *buffer*.
+  #
+  # The *byte_offset* must be aligned to the device's `CL_DEVICE_MEM_BASE_ADDR_ALIGN`
+  # value (retrievable via `Cl.mem_base_addr_align`).
+  def create_sub_buffer(
+    buffer      : LibCL::ClMem,
+    byte_offset : UInt64,
+    byte_size   : UInt64
+  ) : LibCL::ClMem
+    region = LibCL::ClBufferRegion.new(origin: byte_offset, size: byte_size)
+    status = 0
+    sub_buf = LibCL.cl_create_sub_buffer(
+      buffer,
+      LibCL::ClMemFlags::READ_WRITE,
+      LibCL::CL_BUFFER_CREATE_TYPE_REGION,
+      pointerof(region).as(Void*),
+      pointerof(status)
+    )
+    check status
+    sub_buf
+  end
+
+  # Returns the base address alignment (in bits) required for sub-buffers on
+  # the given device. Divide by 8 to get byte alignment.
+  def mem_base_addr_align(device : LibCL::ClDeviceId) : UInt32
+    result = 0_u32
+    check LibCL.cl_get_device_info(
+      device,
+      LibCL::ClDeviceInfo::DEVICE_MEM_BASE_ADDR_ALIGN,
+      sizeof(UInt32),
+      pointerof(result).as(Void*),
+      nil
+    )
+    result
+  end
 end

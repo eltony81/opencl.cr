@@ -246,4 +246,89 @@ lib LibCL
     event_wait_list : ClEvent*,
     event : ClEvent*
   ) : ClInt
+
+  # ---------------------------------------------------------------------------
+  # OpenCL 2.0+ — Command Queue with Properties
+  # ---------------------------------------------------------------------------
+
+  # Queue property keys / values (used as a null-terminated UInt64 array)
+  CL_QUEUE_PROPERTIES                    = 0x9013_u64
+  CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE = 1_u64
+  CL_QUEUE_PRIORITY_KHR                  = 0x1044_u64
+  CL_QUEUE_PRIORITY_HIGH_KHR             = 1_u64
+
+  fun cl_create_command_queue_with_properties = clCreateCommandQueueWithProperties(
+    context     : ClContext,
+    device      : ClDeviceId,
+    properties  : UInt64*,
+    errcode_ret : ClInt*
+  ) : ClCommandQueue
+
+  # ---------------------------------------------------------------------------
+  # OpenCL 2.0+ — Shared Virtual Memory (SVM)
+  # ---------------------------------------------------------------------------
+
+  # CL_DEVICE_SVM_CAPABILITIES (0x1053): bitmask returned by clGetDeviceInfo.
+  # Non-zero means at least coarse-grain buffer SVM is supported.
+  CL_DEVICE_SVM_CAPABILITIES = 0x1053_u32
+
+  fun cl_svm_alloc = clSVMAlloc(
+    context   : ClContext,
+    flags     : UInt64,
+    size      : LibC::SizeT,
+    alignment : ClUint
+  ) : Void*
+
+  fun cl_svm_free = clSVMFree(context : ClContext, svm_pointer : Void*) : Void
+
+  # Map/flags for clEnqueueSVMMap
+  enum ClMapFlags : UInt64
+    READ                    = 1
+    WRITE                   = 2
+    WRITE_INVALIDATE_REGION = 4
+  end
+
+  fun cl_enqueue_svm_map = clEnqueueSVMMap(
+    command_queue           : ClCommandQueue,
+    blocking_map            : ClInt,
+    flags                   : UInt64,
+    svm_ptr                 : Void*,
+    size                    : LibC::SizeT,
+    num_events_in_wait_list : ClUint,
+    event_wait_list         : ClEvent*,
+    event                   : ClEvent*
+  ) : ClInt
+
+  fun cl_enqueue_svm_unmap = clEnqueueSVMUnmap(
+    command_queue           : ClCommandQueue,
+    svm_ptr                 : Void*,
+    num_events_in_wait_list : ClUint,
+    event_wait_list         : ClEvent*,
+    event                   : ClEvent*
+  ) : ClInt
+
+  # ---------------------------------------------------------------------------
+  # OpenCL 1.1+ — Sub-buffer
+  # ---------------------------------------------------------------------------
+
+  CL_BUFFER_CREATE_TYPE_REGION = 0x1220_i32
+
+  struct ClBufferRegion
+    origin : LibC::SizeT
+    size   : LibC::SizeT
+  end
+
+  fun cl_create_sub_buffer = clCreateSubBuffer(
+    buffer             : ClMem,
+    flags              : ClMemFlags,
+    buffer_create_type : ClInt,
+    buffer_create_info : Void*,
+    errcode_ret        : ClInt*
+  ) : ClMem
+
+  # ---------------------------------------------------------------------------
+  # OpenCL 2.0+ — ClDeviceInfo additions
+  # ---------------------------------------------------------------------------
+
+  CL_DEVICE_SVM_COARSE_GRAIN_BUFFER = 1_u64  # bit 0 of SVM capabilities mask
 end
