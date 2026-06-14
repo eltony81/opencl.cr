@@ -316,6 +316,10 @@ module Cl
     check LibCL.cl_release_queue(queue)
   end
 
+  def finish(queue : LibCL::ClCommandQueue)
+    check LibCL.cl_finish(queue)
+  end
+
   def release_context(context : LibCL::ClContext)
     check LibCL.cl_release_context(context)
   end

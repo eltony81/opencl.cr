@@ -1,11 +1,13 @@
 # opencl.cr
 
+[![CI](https://github.com/eltony81/opencl.cr/actions/workflows/ci.yml/badge.svg)](https://github.com/eltony81/opencl.cr/actions/workflows/ci.yml)
+
 Crystal bindings for OpenCL, providing utilities and high/low-level API wrappers for Crystal applications.
 
-This library is primarily maintained to provide necessary utilites to the
-`num.cr` numerical library, so not all features may be covered.  This library
+This library is primarily maintained to provide necessary utilities to the
+`num.cr` numerical library, so not all features may be covered. This library
 should however cover all basic use cases, as well as provide a lower level ability
-to implement more advanced use cases.  Feel free to submit PR's to add functionality
+to implement more advanced use cases. Feel free to submit PR's to add functionality.
 
 ## Installation
 
@@ -32,7 +34,7 @@ Compared to the original repository, this fork adds the following:
 - **Sub-buffers**: `Cl.create_sub_buffer`, `Cl.mem_base_addr_align`.
 - **Hardware Queries**: `Cl.supports_il?`, `Cl.supports_pipes?`, `Cl.supports_command_buffers?`.
 - **Advanced Programs**: `Cl.create_program_with_il` (SPIR-V support), `Cl.create_pipe`.
-- **Control**: `Cl.create_user_event`, `Cl.set_user_event_status`, `Cl.release_event`.
+- **Control & Sync**: `Cl.create_user_event`, `Cl.set_user_event_status`, `Cl.release_event`, `Cl.finish`.
 - **Generic Kernel Handling**: `Cl.args` (macro for safe mixed-type arguments), generic `Cl.set_arg`.
 
 #### **C Bindings (`LibCL` module)**
@@ -43,13 +45,16 @@ Compared to the original repository, this fork adds the following:
 
 ### 🚀 Modern OpenCL Features (2.0+)
 - **Shared Virtual Memory (SVM)**: Allows host and device to share memory regions more efficiently.
-- **SPIR-V / Intermediate Language**: Support for loading pre-compiled binaries.
+- **SPIR-V / Intermediate Language**: Support for loading pre-compiled binaries via `Cl.create_program_with_il`.
 - **Pipes**: Hardware-level FIFO queues for kernel-to-kernel communication.
 - **Sub-buffers**: Create memory aliases for specific byte ranges.
 
 ### 📊 Profiling & Performance
-- **Kernel Profiling**: Nanosecond-precision execution timestamps.
-- **Improved FFI Safety**: Automatic null-terminator stripping and safer memory management.
+- **Kernel Profiling**: Nanosecond-precision execution timestamps (Queued, Submit, Start, End).
+- **Improved FFI Safety**: 
+    - Automatic stripping of null terminators from C-strings (Platform/Device names, versions, build logs).
+    - Macro-based `Cl.args` to prevent `CL_INVALID_ARG_SIZE` errors with mixed types.
+    - Managed memory for platform/device discovery.
 
 ## Usage Examples
 
