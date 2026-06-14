@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Crystal
+        uses: crystal-lang/install-crystal@v1
+        with:
+          crystal: latest
+
+      - name: Install OpenCL (POCL)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pocl-opencl-icd ocl-icd-opencl-dev
+
+      - name: Install dependencies
+        run: shards install
+
+      - name: Check formatting
+        run: crystal tool format --check
+
+      - name: Run tests
+        run: crystal spec
+
+      - name: Run examples
+        run: |
+          crystal run examples/vector_add.cr
+          crystal run examples/profiling.cr
+          crystal run examples/svm_shared_memory.cr
