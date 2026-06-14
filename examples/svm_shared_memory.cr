@@ -25,17 +25,17 @@ end
 begin
   # Map the memory to make it visible to the CPU
   Cl.map_svm(queue, LibCL::CL_TRUE, LibCL::ClMapFlags::WRITE.to_u64, ptr, size)
-  
+
   # Initialize data using Crystal's pointer API
   float_ptr = ptr.as(Float32*)
   1024.times { |i| float_ptr[i] = i.to_f32 }
-  
+
   puts "SVM initialization: [#{float_ptr[0]}, #{float_ptr[1]}, #{float_ptr[2]}]"
 
   # On some devices (like POCL), svm_alloc might return success but kernel execution
   # on SVM pointers might require specific extensions or flags.
   # We will just verify that the pointer is usable from the host.
-  
+
   Cl.unmap_svm(queue, ptr)
   puts "SVM memory allocated and used successfully on Host."
 ensure

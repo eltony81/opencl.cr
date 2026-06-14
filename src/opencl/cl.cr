@@ -67,7 +67,7 @@ module Cl
   def max_work_items(id : LibCL::ClDeviceId) : Array(UInt64)
     dims = uninitialized UInt32
     check LibCL.cl_get_device_info(id, LibCL::ClDeviceInfo::DEVICE_MAX_WORK_ITEM_DIMENSIONS, sizeof(UInt32), pointerof(dims), nil)
-    
+
     result = Array(UInt64).new(dims.to_i, 0_u64)
     check LibCL.cl_get_device_info(id, LibCL::ClDeviceInfo::DEVICE_MAX_WORK_ITEM_SIZES, dims * sizeof(UInt64), result.to_unsafe, nil)
     result
@@ -398,7 +398,7 @@ module Cl
     context : LibCL::ClContext,
     flags : LibCL::ClMemFlags,
     packet_size : UInt32,
-    max_packets : UInt32
+    max_packets : UInt32,
   ) : LibCL::ClMem
     result = LibCL.cl_create_pipe(
       context,
@@ -485,11 +485,11 @@ module Cl
   # * *ptr*      – the SVM `Void*` to map (must have been allocated via `clSVMAlloc`)
   # * *size*     – number of bytes to map
   def map_svm(
-    queue    : LibCL::ClCommandQueue,
+    queue : LibCL::ClCommandQueue,
     blocking : Int32,
-    flags    : UInt64,
-    ptr      : Void*,
-    size     : UInt64
+    flags : UInt64,
+    ptr : Void*,
+    size : UInt64,
   )
     rc = LibCL.cl_enqueue_svm_map(queue, blocking, flags, ptr, size, 0_u32, nil, nil)
     check rc
@@ -511,9 +511,9 @@ module Cl
   # The *byte_offset* must be aligned to the device's `CL_DEVICE_MEM_BASE_ADDR_ALIGN`
   # value (retrievable via `Cl.mem_base_addr_align`).
   def create_sub_buffer(
-    buffer      : LibCL::ClMem,
+    buffer : LibCL::ClMem,
     byte_offset : UInt64,
-    byte_size   : UInt64
+    byte_size : UInt64,
   ) : LibCL::ClMem
     region = LibCL::ClBufferRegion.new(origin: byte_offset, size: byte_size)
     status = 0

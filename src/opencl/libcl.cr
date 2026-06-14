@@ -119,7 +119,7 @@ lib LibCL
     devices : ClDeviceId*,
     pfn_notify : (Char*, Void*, LibC::SizeT, Void* ->),
     user_data : Void*,
-    errcode_ret : ClInt*
+    errcode_ret : ClInt*,
   ) : ClContext
 
   alias ClCommandQueue = Void*
@@ -131,7 +131,7 @@ lib LibCL
     context : ClContext,
     device : ClDeviceId,
     properties : Int32,
-    err : ClInt*
+    err : ClInt*,
   ) : ClCommandQueue
 
   alias ClMem = Void*
@@ -196,12 +196,12 @@ lib LibCL
   # OpenCL 2.0+ — Pipes
   # ---------------------------------------------------------------------------
   fun cl_create_pipe = clCreatePipe(
-    context          : ClContext,
-    flags            : ClMemFlags,
+    context : ClContext,
+    flags : ClMemFlags,
     pipe_packet_size : ClUint,
     pipe_max_packets : ClUint,
-    properties       : ClContextProperties*,
-    errcode_ret      : ClInt*
+    properties : ClContextProperties*,
+    errcode_ret : ClInt*,
   ) : ClMem
 
   # ---------------------------------------------------------------------------
@@ -232,7 +232,7 @@ lib LibCL
     param_name : ClProfilingInfo,
     param_value_size : LibC::SizeT,
     param_value : Void*,
-    param_value_size_ret : LibC::SizeT*
+    param_value_size_ret : LibC::SizeT*,
   ) : ClInt
 
   # ---------------------------------------------------------------------------
@@ -256,7 +256,7 @@ lib LibCL
     ptr : Void*,
     num_events_in_wait_list : ClUint,
     event_wait_list : ClEvent,
-    event : ClEvent*
+    event : ClEvent*,
   ) : ClInt
 
   fun cl_release_context = clReleaseContext(context : ClContext) : ClInt
@@ -274,7 +274,7 @@ lib LibCL
     local_work_size : LibC::SizeT*,
     num_events_in_wait_list : ClUint,
     event_wait_list : ClEvent*,
-    event : ClEvent*
+    event : ClEvent*,
   ) : ClInt
 
   fun cl_enqueue_read_buffer = clEnqueueReadBuffer(
@@ -286,7 +286,7 @@ lib LibCL
     ptr : Void*,
     num_waiting : ClUint,
     event_wait_list : ClEvent*,
-    event : ClEvent*
+    event : ClEvent*,
   ) : ClInt
 
   fun cl_enqueue_fill_buffer = clEnqueueFillBuffer(
@@ -298,7 +298,7 @@ lib LibCL
     size : LibC::SizeT,
     num_events_in_wait_list : ClUint,
     event_wait_list : ClEvent*,
-    event : ClEvent*
+    event : ClEvent*,
   ) : ClInt
 
   # ---------------------------------------------------------------------------
@@ -306,15 +306,15 @@ lib LibCL
   # ---------------------------------------------------------------------------
 
   # Queue property keys / values (used as a null-terminated UInt64 array)
-  CL_QUEUE_PROPERTIES                    = 0x9013_u64
-  CL_QUEUE_PRIORITY_KHR                  = 0x1044_u64
-  CL_QUEUE_PRIORITY_HIGH_KHR             = 1_u64
+  CL_QUEUE_PROPERTIES        = 0x9013_u64
+  CL_QUEUE_PRIORITY_KHR      = 0x1044_u64
+  CL_QUEUE_PRIORITY_HIGH_KHR =      1_u64
 
   fun cl_create_command_queue_with_properties = clCreateCommandQueueWithProperties(
-    context     : ClContext,
-    device      : ClDeviceId,
-    properties  : UInt64*,
-    errcode_ret : ClInt*
+    context : ClContext,
+    device : ClDeviceId,
+    properties : UInt64*,
+    errcode_ret : ClInt*,
   ) : ClCommandQueue
 
   # ---------------------------------------------------------------------------
@@ -326,10 +326,10 @@ lib LibCL
   CL_DEVICE_SVM_CAPABILITIES = 0x1053_u32
 
   fun cl_svm_alloc = clSVMAlloc(
-    context   : ClContext,
-    flags     : UInt64,
-    size      : LibC::SizeT,
-    alignment : ClUint
+    context : ClContext,
+    flags : UInt64,
+    size : LibC::SizeT,
+    alignment : ClUint,
   ) : Void*
 
   fun cl_svm_free = clSVMFree(context : ClContext, svm_pointer : Void*) : Void
@@ -342,22 +342,22 @@ lib LibCL
   end
 
   fun cl_enqueue_svm_map = clEnqueueSVMMap(
-    command_queue           : ClCommandQueue,
-    blocking_map            : ClInt,
-    flags                   : UInt64,
-    svm_ptr                 : Void*,
-    size                    : LibC::SizeT,
+    command_queue : ClCommandQueue,
+    blocking_map : ClInt,
+    flags : UInt64,
+    svm_ptr : Void*,
+    size : LibC::SizeT,
     num_events_in_wait_list : ClUint,
-    event_wait_list         : ClEvent*,
-    event                   : ClEvent*
+    event_wait_list : ClEvent*,
+    event : ClEvent*,
   ) : ClInt
 
   fun cl_enqueue_svm_unmap = clEnqueueSVMUnmap(
-    command_queue           : ClCommandQueue,
-    svm_ptr                 : Void*,
+    command_queue : ClCommandQueue,
+    svm_ptr : Void*,
     num_events_in_wait_list : ClUint,
-    event_wait_list         : ClEvent*,
-    event                   : ClEvent*
+    event_wait_list : ClEvent*,
+    event : ClEvent*,
   ) : ClInt
 
   # ---------------------------------------------------------------------------
@@ -368,22 +368,22 @@ lib LibCL
 
   struct ClBufferRegion
     origin : LibC::SizeT
-    size   : LibC::SizeT
+    size : LibC::SizeT
   end
 
   fun cl_create_sub_buffer = clCreateSubBuffer(
-    buffer             : ClMem,
-    flags              : ClMemFlags,
+    buffer : ClMem,
+    flags : ClMemFlags,
     buffer_create_type : ClInt,
     buffer_create_info : Void*,
-    errcode_ret        : ClInt*
+    errcode_ret : ClInt*,
   ) : ClMem
 
   # ---------------------------------------------------------------------------
   # OpenCL 2.0+ — ClDeviceInfo additions
   # ---------------------------------------------------------------------------
 
-  CL_DEVICE_SVM_COARSE_GRAIN_BUFFER = 1_u64  # bit 0 of SVM capabilities mask
+  CL_DEVICE_SVM_COARSE_GRAIN_BUFFER = 1_u64 # bit 0 of SVM capabilities mask
 
   fun cl_get_extension_function_address = clGetExtensionFunctionAddress(func_name : UInt8*) : Void*
   fun cl_get_extension_function_address_for_platform = clGetExtensionFunctionAddressForPlatform(platform : ClPlatformId, func_name : UInt8*) : Void*
