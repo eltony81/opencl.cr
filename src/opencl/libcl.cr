@@ -334,6 +334,12 @@ lib LibCL
 
   fun cl_svm_free = clSVMFree(context : ClContext, svm_pointer : Void*) : Void
 
+  fun cl_set_kernel_arg_svm_pointer = clSetKernelArgSVMPointer(
+    kernel    : ClKernel,
+    arg_index : ClUint,
+    arg_value : Void*
+  ) : ClInt
+
   # Map/flags for clEnqueueSVMMap
   enum ClMapFlags : UInt64
     READ                    = 1

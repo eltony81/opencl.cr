@@ -233,6 +233,10 @@ module Cl
     result
   end
 
+  def set_arg(kernel : LibCL::ClKernel, item : SVMPointer, index : UInt32)
+    check LibCL.cl_set_kernel_arg_svm_pointer(kernel, index, item.raw)
+  end
+
   def set_arg(kernel : LibCL::ClKernel, item : LibCL::ClMem, index : UInt32)
     check LibCL.cl_set_kernel_arg(kernel, index, sizeof(LibCL::ClMem), pointerof(item))
   end
